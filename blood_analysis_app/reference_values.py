@@ -1,32 +1,17 @@
 def get_normal_ranges(age, gender):
-    """
-    Возвращает нормальные диапазоны показателей крови для взрослых (от 18 лет и старше)
-    в зависимости от возраста и пола. Данные на основе информации с сайта https://gemotest.ru/
-    
-    Args:
-        age (int): Возраст пациента в годах (только от 18 лет и старше)
-        gender (str): Пол пациента ('М' или 'Ж')
-    
-    Returns:
-        dict: Словарь с нормальными диапазонами для каждого показателя
-    
-    Raises:
-        ValueError: Если возраст меньше 18 лет
-    """
+
     if age < 18:
         raise ValueError("Эта функция предназначена только для взрослых пациентов (18 лет и старше)")
     
     gender = gender.upper()
     
-    # Определение возрастной группы для взрослых
     if age < 45:
-        age_group = "young_adult"    # 18-44 лет
+        age_group = "young_adult"    
     elif age < 65:
-        age_group = "middle_adult"   # 45-64 лет
+        age_group = "middle_adult" 
     else:
-        age_group = "elderly"        # от 65 лет
+        age_group = "elderly"        
     
-    # Нормы гемоглобина (г/л)
     hemoglobin_ranges = {
         "young_adult": {
             "М": (132, 173),
@@ -42,7 +27,6 @@ def get_normal_ranges(age, gender):
         }
     }
     
-    # Нормы гематокрита (%)
     hematocrit_ranges = {
         "young_adult": {
             "М": (39, 49),
@@ -58,7 +42,6 @@ def get_normal_ranges(age, gender):
         }
     }
     
-    # Нормы эритроцитов (×10¹²/л)
     rbc_ranges = {
         "young_adult": {
             "М": (4.3, 5.7),
@@ -74,28 +57,24 @@ def get_normal_ranges(age, gender):
         }
     }
     
-    # Нормы лейкоцитов (×10⁹/л)
     wbc_ranges = {
         "young_adult": (4.5, 11.3),
         "middle_adult": (4.5, 11.3),
         "elderly": (4.5, 11.3)
     }
     
-    # Нормы тромбоцитов (×10⁹/л)
     plt_ranges = {
         "young_adult": (180, 320),
         "middle_adult": (180, 320),
         "elderly": (180, 320)
     }
     
-    # Нормы MCV (фл)
     mcv_ranges = {
         "young_adult": (80, 100),
         "middle_adult": (80, 100),
         "elderly": (80, 100)
     }
-    
-    # Нормы MCH (пг)
+
     mch_ranges = {
         "young_adult": {
             "М": (27, 34),
@@ -110,24 +89,19 @@ def get_normal_ranges(age, gender):
             "Ж": (27, 35)
         }
     }
-    
-    # Нормы MCHC (г/л)
+
     mchc_ranges = {
         "young_adult": (320, 360),
         "middle_adult": (320, 360),
         "elderly": (320, 360)
     }
     
-    # Функция для получения значения в зависимости от пола и возрастной группы
     def get_value(ranges_dict):
         if isinstance(ranges_dict[age_group], dict):
-            # Для показателей, зависящих от пола
             return ranges_dict[age_group][gender]
         else:
-            # Для показателей, не зависящих от пола
             return ranges_dict[age_group]
     
-    # Сформировать итоговый словарь с нормальными диапазонами
     return {
         "hemoglobin": get_value(hemoglobin_ranges),
         "hematocrit": get_value(hematocrit_ranges),
