@@ -1,0 +1,64 @@
+        body {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            background-color: #f8f9fa;
+        }
+        .header {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 1rem;
+        }
+        .result-normal {
+            color: #198754;
+            font-weight: bold;
+        }
+        .result-abnormal {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .progress-bar-custom {
+            height: 10px;
+            margin-top: 5px;
+        }
+        .value-marker {
+            position: relative;
+            height: 20px;
+        }
+        .value-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #0d6efd;
+            border-radius: 50%;
+            transform: translateX(-50%);
+        }
+        .value-line {
+            position: absolute;
+            width: 2px;
+            height: 10px;
+            background-color: #0d6efd;
+            transform: translateX(-50%);
+        }
+        .value-text {
+            position: absolute;
+            font-size: 0.8rem;
+            transform: translateX(-50%);
+            top: 12px;
+        }
+        .range-label {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .recommendation-box {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+        }
+        .doctor-needed {
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+        }
+        .doctor-not-needed {
+            background-color: #d1e7dd;
+            border: 1px solid #badbcc;
+        }

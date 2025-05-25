@@ -195,7 +195,6 @@ def save_model_and_components(model, scaler, features):
     print("Модель и компоненты сохранены в директорию 'model'")
 
 def main():
-
     data_path = "/content/CBC_dataset.csv"
     X_train, X_test, y_train, y_test, scaler, features = load_and_prepare_data(data_path)
     model, history = build_and_train_model(X_train, y_train, X_test, y_test, X_train.shape[1])
