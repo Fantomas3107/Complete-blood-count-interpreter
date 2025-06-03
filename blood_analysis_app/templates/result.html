@@ -2,65 +2,367 @@
 
 {% block title %}Результаты анализа крови{% endblock %}
 
+{% block extra_head %}
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+{% endblock %}
+
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10">
-        <div class="card mb-4">
-            <div class="card-header">
-                <h4 class="mb-0">Результаты анализа крови</h4>
-                <p class="text-muted mb-0">Пациент: {{ age }} лет, пол: {{ "Мужской" if gender == "М" else "Женский" }}</p>
-            </div>
-            <div class="card-body">
-                <h5 class="card-title mb-4">Показатели и их нормы</h5>
-                
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Показатель</th>
-                            <th>Значение</th>
-                            <th>Нормы</th>
-                            <th>Статус</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for name, data in results.items() %}
-                        <tr>
-                            <td>{{ name }}</td>
-                            <td class="{{ 'result-normal' if data.is_normal else 'result-abnormal' }}">
-                                {{ data.value }}
-                            </td>
-                            <td>{{ data.min }} - {{ data.max }}</td>
-                            <td>
-                                {% if data.is_normal %}
-                                    <span class="result-normal">В норме</span>
-                                {% else %}
-                                    {% if data.value < data.min %}
-                                        <span class="result-abnormal">Ниже нормы</span>
-                                    {% else %}
-                                        <span class="result-abnormal">Выше нормы</span>
-                                    {% endif %}
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                
-                <div class="recommendation-box {{ 'doctor-needed' if prediction == 1 else 'doctor-not-needed' }} mt-4">
-                    <h5 class="card-title">Рекомендация системы:</h5>
-                    {% if prediction == 1 %}
-                        <p class="mb-1"><strong>Рекомендуется консультация врача</strong> (вероятность необходимости: {{ (probability * 100)|round(1) }}%)</p>
-                        <p class="mb-0">У вас обнаружено {{ deviations_count }} отклонений от нормы. Рекомендуется обратиться к терапевту для дополнительной консультации.</p>
-                    {% else %}
-                        <p class="mb-1"><strong>Показатели в пределах нормы</strong> (вероятность отклонений: {{ (probability * 100)|round(1) }}%)</p>
-                        <p class="mb-0">Ваши показатели крови находятся в пределах референсных значений для вашего возраста и пола. Рекомендуется проходить плановое обследование раз в год.</p>
-                    {% endif %}
+
+<a href="/" class="home-page-btn">
+    <i class="fas fa-home"></i> Главная страница
+</a>
+<!-- Дисклеймер -->
+<div class="disclaimer">
+    <div class="row align-items-center">
+        <div class="col-md-1 text-center">
+            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 2em;"></i>
+        </div>
+        <div class="col-md-11">
+            <h6 class="mb-2"><strong>Важное уведомление</strong></h6>
+            <p class="mb-0">
+                Данные рекомендации сформированы на основе анализа лабораторных данных. 
+                Результаты носят <strong>информационно-справочный характер</strong> и не являются медицинским диагнозом. 
+                Для постановки диагноза и назначения лечения необходимо обратиться к квалифицированному врачу.
+                Референсные значения рассчитаны для {% if age < 45 %}молодых взрослых (18-44 года){% elif age < 65 %}среднего возраста (45-64 года){% else %}пожилых (65+ лет){% endif %}, пол: {% if gender == 'М' %}мужской{% else %}женский{% endif %}.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Кнопка печати -->
+<div class="print-button">
+    <button onclick="window.print()" class="btn btn-primary btn-lg">
+        <i class="fas fa-print"></i> Печать результатов
+    </button>
+</div>
+
+
+<div class="container-fluid px-4">
+    <div class="row justify-content-center">
+        <div class="col-md-12">
+            <!-- Информация о пациенте -->
+            <div class="patient-info mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="mb-2">
+                            <i class="fas fa-user-circle"></i> Информация о пациенте
+                        </h5>
+                        <p class="mb-0">
+                            Пациент: {{ age }} лет, пол: {% if gender == 'М' %}мужской{% else %}женский{% endif %} | 
+                            Дата анализа: {{ analysis_date }} |
+                            Возрастная группа: {% if age < 45 %}молодой взрослый (18-44){% elif age < 65 %}средний возраст (45-64){% else %}пожилой (65+){% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="badge bg-danger">{{ deviations_count }}</div>
+                        <small class="d-block mt-1">отклонений от нормы</small>
+                    </div>
                 </div>
             </div>
-            <div class="card-footer">
-                <div class="text-center">
-                    <p class="text-muted mb-2">Результаты анализа предоставлены на основе системы искусственного интеллекта и не заменяют консультацию врача.</p>
-                    <a href="/" class="btn btn-primary">Вернуться на главную</a>
+
+            <!-- Диагностика от нейронной сети -->
+            <div class="ai-prediction mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h4 class="mb-2">
+                            <i class="fas fa-brain"></i> Диагностика нейронной сети
+                        </h4>
+                        <h5 class="mb-2">{{ ai_prediction.predicted_disease }}</h5>
+                        <p class="mb-2">{{ disease_info.description }}</p>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{ ai_prediction.confidence * 100 }}%"></div>
+                        </div>
+                        <small>Доверие модели: {{ (ai_prediction.confidence * 100)|round(1) }}%</small>
+                    </div>
+                    <div class="col-md-4 text-center">
+                        <i class="fas fa-robot" style="font-size: 4em; opacity: 0.8;"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ШАБЛОН 1: РАСШИФРОВКА -->
+            <div class="template-section active">
+                <div class="template-header">
+                    <h4><i class="fas fa-clipboard-list"></i> Расшифровка результатов анализа</h4>
+                    <p class="mb-0">Подробное объяснение каждого показателя</p>
+                </div>
+
+                <div class="card mb-4 severity-{{ disease_info.severity }}">
+                    <div class="card-body">
+                        <!-- Основные показатели -->
+                        <h5 class="text-primary mb-3"><i class="fas fa-vial"></i> Основные показатели крови</h5>
+                        
+                        {% for param, data in results.items() if param in ['WBC_Count', 'RBC_Count', 'Hemoglobin', 'Hematocrit', 'PLT_Count'] %}
+                        <div class="parameter-explanation">
+                            <h5>
+                                {% if param == 'WBC_Count' %}Лейкоциты (WBC)
+                                {% elif param == 'RBC_Count' %}Эритроциты (RBC)
+                                {% elif param == 'Hemoglobin' %}Гемоглобин (HGB)
+                                {% elif param == 'Hematocrit' %}Гематокрит (HCT)
+                                {% elif param == 'PLT_Count' %}Тромбоциты (PLT)
+                                {% endif %}
+                            </h5>
+                            
+                            <p>
+                                Ваше значение: <span class="value">{{ data.value }}</span><br>
+                                Норма для {% if gender == 'М' %}мужчин{% else %}женщин{% endif %} 
+                                {% if age < 45 %}18-44 лет{% elif age < 65 %}45-64 лет{% else %}65+ лет{% endif %}: 
+                                <span class="normal">{{ data.min }}-{{ data.max }}</span>
+                            </p>
+                            
+                            {% if not data.is_normal %}
+                            <div class="possible-causes">
+                                <strong>Возможные причины отклонения:</strong>
+                                {% if param == 'WBC_Count' %}
+                                <ul>
+                                    <li>Бактериальная или вирусная инфекция</li>
+                                    <li>Воспалительный процесс в организме</li>
+                                    <li>Стресс или физическое перенапряжение</li>
+                                    <li>Аллергические реакции</li>
+                                </ul>
+                                
+                                {% elif param == 'RBC_Count' %}
+                                <ul>
+                                    {% if data.deviation_type == 'above' %}
+                                    <li>Обезвоживание организма</li>
+                                    <li>Хронические заболевания легких</li>
+                                    <li>Курение</li>
+                                    {% else %}
+                                    <li>Анемия различного происхождения</li>
+                                    <li>Дефицит железа, витамина B12 или фолиевой кислоты</li>
+                                    <li>Хронические воспалительные заболевания</li>
+                                    {% endif %}
+                                </ul>
+                                
+                                {% elif param == 'Hemoglobin' %}
+                                <ul>
+                                    {% if data.deviation_type == 'above' %}
+                                    <li>Обезвоживание</li>
+                                    <li>Хроническая гипоксия (например, при курении)</li>
+                                    {% else %}
+                                    <li>Железодефицитная анемия</li>
+                                    <li>Дефицит витаминов (B12, фолиевая кислота)</li>
+                                    <li>Кровопотеря (острая или хроническая)</li>
+                                    {% endif %}
+                                </ul>
+                                
+                                {% elif param == 'Hematocrit' %}
+                                <ul>
+                                    {% if data.deviation_type == 'above' %}
+                                    <li>Обезвоживание</li>
+                                    <li>Хронические заболевания легких</li>
+                                    <li>Курение</li>
+                                    {% else %}
+                                    <li>Анемии различного генеза</li>
+                                    <li>Гипергидратация</li>
+                                    <li>Беременность</li>
+                                    {% endif %}
+                                </ul>
+                                
+                                {% elif param == 'PLT_Count' %}
+                                <ul>
+                                    {% if data.deviation_type == 'above' %}
+                                    <li>Воспалительные процессы</li>
+                                    <li>Железодефицитная анемия</li>
+                                    <li>Послеоперационные состояния</li>
+                                    {% else %}
+                                    <li>Вирусные инфекции</li>
+                                    <li>Аутоиммунные заболевания</li>
+                                    <li>Прием некоторых лекарств</li>
+                                    {% endif %}
+                                </ul>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="recommendations">
+                                <strong>Рекомендации:</strong>
+                                <ul>
+                                    <li>Проконсультироваться с врачом</li>
+                                    <li>Повторить анализ через 2-4 недели</li>
+                                    {% if param in ['Hemoglobin', 'RBC_Count', 'Hematocrit'] %}
+                                    <li>Сдать анализ на ферритин и железо</li>
+                                    {% elif param in ['WBC_Count', 'PLT_Count'] %}
+                                    <li>Сдать анализ на СРБ</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> Показатель в пределах нормы.
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Лейкоцитарная формула -->
+                        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-microscope"></i> Лейкоцитарная формула</h5>
+                        
+                        {% for param, data in results.items() if param in ['Neutrophils', 'Lymphocytes', 'Monocytes', 'Eosinophils'] %}
+                        <div class="parameter-explanation">
+                            <h5>
+                                {% if param == 'Neutrophils' %}Нейтрофилы
+                                {% elif param == 'Lymphocytes' %}Лимфоциты
+                                {% elif param == 'Monocytes' %}Моноциты
+                                {% elif param == 'Eosinophils' %}Эозинофилы
+                                {% endif %}
+                            </h5>
+                            
+                            <p>
+                                Ваше значение: <span class="value">{{ data.value }}</span><br>
+                                Норма для {% if gender == 'М' %}мужчин{% else %}женщин{% endif %} 
+                                {% if age < 45 %}18-44 лет{% elif age < 65 %}45-64 лет{% else %}65+ лет{% endif %}: 
+                                <span class="normal">{{ data.min }}-{{ data.max }}</span>
+                            </p>
+                            
+                            {% if not data.is_normal %}
+                            <div class="possible-causes">
+                                <strong>Возможные причины отклонения:</strong>
+                                {% if param == 'Neutrophils' %}
+                                <ul>
+                                    <li>Бактериальные инфекции</li>
+                                    <li>Воспалительные процессы</li>
+                                    <li>Стрессовые ситуации</li>
+                                    <li>Прием кортикостероидов</li>
+                                </ul>
+                                
+                                {% elif param == 'Lymphocytes' %}
+                                <ul>
+                                    {% if data.deviation_type == 'above' %}
+                                    <li>Вирусные инфекции</li>
+                                    <li>Некоторые бактериальные инфекции (туберкулез, коклюш)</li>
+                                    <li>Лимфопролиферативные заболевания</li>
+                                    {% else %}
+                                    <li>Иммунодефицитные состояния</li>
+                                    <li>Прием иммуносупрессивных препаратов</li>
+                                    <li>Лучевая терапия</li>
+                                    {% endif %}
+                                </ul>
+                                
+                                {% elif param == 'Monocytes' %}
+                                <ul>
+                                    <li>Хронические воспалительные процессы</li>
+                                    <li>Некоторые инфекционные заболевания</li>
+                                    <li>Аутоиммунные заболевания</li>
+                                    <li>Гематологические заболевания</li>
+                                </ul>
+                                
+                                {% elif param == 'Eosinophils' %}
+                                <ul>
+                                    <li>Аллергические реакции</li>
+                                    <li>Паразитарные инвазии</li>
+                                    <li>Кожные заболевания (экзема, псориаз)</li>
+                                    <li>Аутоиммунные процессы</li>
+                                </ul>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="recommendations">
+                                <strong>Рекомендации:</strong>
+                                <ul>
+                                    <li>Проконсультироваться с врачом</li>
+                                    <li>Повторить анализ через 2-4 недели</li>
+                                    {% if param == 'Neutrophils' %}
+                                    <li>Сдать анализ на СРБ</li>
+                                    {% elif param == 'Lymphocytes' %}
+                                    <li>Провести иммунологическое исследование</li>
+                                    {% elif param == 'Eosinophils' %}
+                                    <li>Проверить наличие аллергии или паразитов</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> Показатель в пределах нормы.
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Маркеры воспаления -->
+                        <h5 class="text-primary mb-3 mt-4"><i class="fas fa-fire"></i> Маркеры воспаления</h5>
+                        
+                        {% for param, data in results.items() if param in ['ESR', 'CRP'] %}
+                        <div class="parameter-explanation">
+                            <h5>
+                                {% if param == 'ESR' %}СОЭ (скорость оседания эритроцитов)
+                                {% elif param == 'CRP' %}С-реактивный белок (CRP)
+                                {% endif %}
+                            </h5>
+                            
+                            <p>
+                                Ваше значение: <span class="value">{{ data.value }}</span><br>
+                                Норма для {% if gender == 'М' %}мужчин{% else %}женщин{% endif %} 
+                                {% if age < 45 %}18-44 лет{% elif age < 65 %}45-64 лет{% else %}65+ лет{% endif %}: 
+                                <span class="normal">{{ data.min }}-{{ data.max }}</span>
+                            </p>
+                            
+                            {% if not data.is_normal %}
+                            <div class="possible-causes">
+                                <strong>Возможные причины отклонения:</strong>
+                                {% if param == 'ESR' %}
+                                <ul>
+                                    <li>Воспалительные процессы</li>
+                                    <li>Инфекционные заболевания</li>
+                                    <li>Аутоиммунные заболевания</li>
+                                    <li>Анемия</li>
+                                    <li>Онкологические заболевания</li>
+                                </ul>
+                                
+                                {% elif param == 'CRP' %}
+                                <ul>
+                                    <li>Бактериальные инфекции</li>
+                                    <li>Воспалительные заболевания</li>
+                                    <li>Травмы и ожоги</li>
+                                    <li>Онкологические заболевания</li>
+                                    <li>Аутоиммунные процессы</li>
+                                </ul>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="recommendations">
+                                <strong>Рекомендации:</strong>
+                                <ul>
+                                    <li>Проконсультироваться с врачом</li>
+                                    <li>Повторить анализ через 2-4 недели</li>
+                                    {% if param == 'ESR' %}
+                                    <li>Провести дополнительные исследования на воспаление</li>
+                                    {% elif param == 'CRP' %}
+                                    <li>Сдать анализ на прокальцитонин</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> Показатель в пределах нормы.
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Рекомендации от нейронной сети -->
+                        <div class="ai-recommendations mt-4">
+                            <h5><i class="fas fa-robot"></i> Рекомендации нейронной сети</h5>
+                            <div class="mt-3">
+                                {% for recommendation in disease_info.recommendations %}
+                                <div class="d-flex mb-2">
+                                    <i class="fas fa-chevron-right mt-1 me-2 text-primary"></i>
+                                    <span>{{ recommendation }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-info mt-4">
+                            <h5><i class="fas fa-info-circle"></i> Общие рекомендации</h5>
+                            <ul class="mt-3">
+                                <li class="mb-2">Обязательно проконсультируйтесь с врачом для точной интерпретации результатов</li>
+                                <li class="mb-2">Подготовьтесь к визиту - вспомните все симптомы, которые вас беспокоят</li>
+                                <li class="mb-2">Возьмите с собой предыдущие анализы для сравнения</li>
+                                <li>Не занимайтесь самолечением на основании этих результатов</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

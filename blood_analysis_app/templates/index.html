@@ -1,97 +1,183 @@
 {% extends "base.html" %}
 
-{% block title %}Анализатор крови - Ввод данных{% endblock %}
-
+{% block title %}Анализатор крови - ИИ Диагностика{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-    <div class="col-md-8">
+    <div class="col-md-10">
         <div class="card">
-            <div class="card-header">
-                <h4 class="mb-0">Введите результаты общего анализа крови</h4>
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">🧬 ИИ Анализатор крови для диагностики аутоиммунных заболеваний</h4>
+                <p class="mb-0 mt-2">Введите результаты анализа крови для получения предварительного диагноза</p>
             </div>
             <div class="card-body">
-                <form action="/analyze" method="post">
+                <form action="/analyze" method="post" id="bloodAnalysisForm">
+                    <!-- Личная информация -->
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label for="age" class="form-label">Возраст (лет)</label>
-                            <input type="number" class="form-control" id="age" name="age" min="18" max="80" required>
+                            <label for="age" class="form-label">
+                                <i class="fas fa-user"></i> Возраст (лет) *
+                            </label>
+                            <input type="number" class="form-control" id="age" name="age" 
+                                   min="18" max="100" required placeholder="Например: 35">
                         </div>
                         <div class="col-md-6">
-                            <label for="gender" class="form-label">Пол</label>
+                            <label for="gender" class="form-label">
+                                <i class="fas fa-venus-mars"></i> Пол *
+                            </label>
                             <select class="form-select" id="gender" name="gender" required>
+                                <option value="">Выберите пол</option>
                                 <option value="М">Мужской</option>
                                 <option value="Ж">Женский</option>
                             </select>
                         </div>
                     </div>
                     
-                    <h5 class="card-title mb-3">Показатели крови</h5>
+                    <h5 class="card-title mb-3 text-primary">
+                        🩸 Основные показатели крови (обязательные)
+                    </h5>
                     
                     <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="hemoglobin" class="form-label">Гемоглобин (HGB (г/л))</label>
-                            <input type="number" class="form-control" id="hemoglobin" name="hemoglobin" step="0.01" required>
+                        <div class="col-md-4">
+                            <label for="wbc_count" class="form-label">
+                                Лейкоциты (WBC) * <br>
+                                <small class="text-muted">×10⁹/л, норма: 4.0-9.0</small>
+                            </label>
+                            <input type="number" class="form-control" id="wbc_count" name="wbc_count" 
+                                   step="0.01" required placeholder="Например: 6.5">
                         </div>
-                        <div class="col-md-6">
-                            <label for="hematocrit" class="form-label">Гематокрит (HTC (%))</label>
-                            <input type="number" class="form-control" id="hematocrit" name="hematocrit" step="0.01" required>
+                        <div class="col-md-4">
+                            <label for="rbc_count" class="form-label">
+                                Эритроциты (RBC) * <br>
+                                <small class="text-muted">×10¹²/л, норма: 4.1-5.9</small>
+                            </label>
+                            <input type="number" class="form-control" id="rbc_count" name="rbc_count" 
+                                   step="0.01" required placeholder="Например: 4.8">
                         </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="rbc_count" class="form-label">Эритроциты (RBC (×10¹²/л))</label>
-                            <input type="number" class="form-control" id="rbc_count" name="rbc_count" step="0.01" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="wbc_count" class="form-label">Лейкоциты (WBC (×10⁹/л))</label>
-                            <input type="number" class="form-control" id="wbc_count" name="wbc_count" step="0.01" required>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label for="plt_count" class="form-label">Тромбоциты (PLT (×10⁹/л))</label>
-                            <input type="number" class="form-control" id="plt_count" name="plt_count" step="0.01" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="mcv" class="form-label">MCV (фл)</label>
-                            <input type="number" class="form-control" id="mcv" name="mcv" step="0.01" required>
+                        <div class="col-md-4">
+                            <label for="hemoglobin" class="form-label">
+                                Гемоглобин (HGB) * <br>
+                                <small class="text-muted">г/л, норма: 120-175</small>
+                            </label>
+                            <input type="number" class="form-control" id="hemoglobin" name="hemoglobin" 
+                                   step="0.1" required placeholder="Например: 140">
                         </div>
                     </div>
                     
                     <div class="row mb-4">
                         <div class="col-md-6">
-                            <label for="mch" class="form-label">MCH (пг)</label>
-                            <input type="number" class="form-control" id="mch" name="mch" step="0.01" required>
+                            <label for="hematocrit" class="form-label">
+                                Гематокрит (HTC) * <br>
+                                <small class="text-muted">%, норма: 35-49</small>
+                            </label>
+                            <input type="number" class="form-control" id="hematocrit" name="hematocrit" 
+                                   step="0.1" required placeholder="Например: 42">
                         </div>
                         <div class="col-md-6">
-                            <label for="mchc" class="form-label">MCHC (г/л)</label>
-                            <input type="number" class="form-control" id="mchc" name="mchc" step="1" required>
+                            <label for="plt_count" class="form-label">
+                                Тромбоциты (PLT) * <br>
+                                <small class="text-muted">×10⁹/л, норма: 150-400</small>
+                            </label>
+                            <input type="number" class="form-control" id="plt_count" name="plt_count" 
+                                   step="1" required placeholder="Например: 250">
+                        </div>
+                    </div>
+                    
+                    <h5 class="card-title mb-3 text-info">
+                        🔬 Дополнительные показатели (для более точной диагностики)
+                    </h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="neutrophils" class="form-label">
+                                Нейтрофилы <br>
+                                <small class="text-muted">×10⁹/л, норма: 2.0-7.0</small>
+                            </label>
+                            <input type="number" class="form-control" id="neutrophils" name="neutrophils" 
+                                   step="0.01" placeholder="Например: 4.2">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="lymphocytes" class="form-label">
+                                Лимфоциты <br>
+                                <small class="text-muted">×10⁹/л, норма: 1.2-3.4</small>
+                            </label>
+                            <input type="number" class="form-control" id="lymphocytes" name="lymphocytes" 
+                                   step="0.01" placeholder="Например: 2.1">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="monocytes" class="form-label">
+                                Моноциты <br>
+                                <small class="text-muted">×10⁹/л, норма: 0.1-0.9</small>
+                            </label>
+                            <input type="number" class="form-control" id="monocytes" name="monocytes" 
+                                   step="0.01" placeholder="Например: 0.5">
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label for="eosinophils" class="form-label">
+                                Эозинофилы <br>
+                                <small class="text-muted">×10⁹/л, норма: 0.02-0.5</small>
+                            </label>
+                            <input type="number" class="form-control" id="eosinophils" name="eosinophils" 
+                                   step="0.01" placeholder="Например: 0.2">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="esr" class="form-label">
+                                СОЭ (ESR) <br>
+                                <small class="text-muted">мм/ч, норма: 2-20</small>
+                            </label>
+                            <input type="number" class="form-control" id="esr" name="esr" 
+                                   step="1" placeholder="Например: 10">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="crp" class="form-label">
+                                С-реактивный белок (CRP) <br>
+                                <small class="text-muted">мг/л, норма: 0-3</small>
+                            </label>
+                            <input type="number" class="form-control" id="crp" name="crp" 
+                                   step="0.1" placeholder="Например: 1.2">
                         </div>
                     </div>
                     
                     <div class="text-center">
-                        <button type="submit" class="btn btn-primary btn-lg">Анализировать</button>
+                        <button type="submit" class="btn btn-primary btn-lg px-5">
+                            <i class="fas fa-brain"></i> Анализировать с помощью ИИ
+                        </button>
                     </div>
                 </form>
             </div>
-            <div class="card-footer">
-                <div class="small text-muted">
-                    <p>Справочная информация:</p>
-                    <ul>
-                        <li>Гемоглобин - белок эритроцитов, отвечающий за перенос кислорода</li>
-                        <li>Гематокрит - процентное соотношение объема эритроцитов к общему объему крови</li>
-                        <li>Эритроциты - красные кровяные клетки, переносящие кислород</li>
-                        <li>Лейкоциты - белые кровяные клетки, участвующие в иммунной защите</li>
-                        <li>Тромбоциты - клетки крови, участвующие в процессе свертывания</li>
-                        <li>MCV (средний объем эритроцита) - показатель размера эритроцитов</li>
-                        <li>MCH (среднее содержание гемоглобина в эритроците) - количество гемоглобина в одном эритроците</li>
-                        <li>MCHC (средняя концентрация гемоглобина в эритроците) - концентрация гемоглобина в эритроците</li>
-                    </ul>
+            <div class="card-footer bg-light">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">🤖 Возможности ИИ диагностики:</h6>
+                        <ul class="small mb-0">
+                            <li>Ревматоидный артрит</li>
+                            <li>Системная красная волчанка</li>
+                            <li>Синдром Шегрена</li>
+                            <li>Псориатический артрит</li>
+                            <li>Воспалительные заболевания кишечника</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-warning">⚠️ Важное предупреждение:</h6>
+                        <p class="small mb-0">
+                            Результаты анализа предоставлены на основе ИИ и носят 
+                            информационный характер. Не заменяют консультацию врача. 
+                            При выявлении отклонений обязательно обратитесь к специалисту.
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('bloodAnalysisForm').addEventListener('submit', function(e) {
+    const submitButton = this.querySelector('button[type="submit"]');
+    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Анализируем...';
+    submitButton.disabled = true;
+});
+</script>
 {% endblock %}

@@ -1,0 +1,25 @@
+{
+  "features": [
+    "WBC_Count",
+    "RBC_Count",
+    "Hemoglobin",
+    "Hematocrit",
+    "PLT_Count",
+    "Neutrophils",
+    "Lymphocytes",
+    "Monocytes",
+    "Eosinophils",
+    "ESR",
+    "Age",
+    "CRP"
+  ],
+  "class_names": [
+    "Autoimmune orchitis",
+    "Graves' disease",
+    "Normal",
+    "Rheumatoid arthritis",
+    "Sj\u00f6gren syndrome"
+  ],
+  "accuracy": 1.0,
+  "input_shape": 12
+}
