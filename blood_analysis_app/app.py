@@ -10,15 +10,13 @@ from datetime import datetime
 app = Flask(__name__)
 
 class BloodAnalysisAI:
-    def __init__(self, model_path='create_model/model/result2/'):
-        """Инициализация ИИ модели для анализа крови"""
+    def __init__(self, model_path='create_model/model/result/'):
         self.model = None
         self.scaler = None
         self.label_encoder = None
         self.metadata = None
         self.load_model(model_path)
         
-        # Описания заболеваний и рекомендации
         self.disease_info = {
             'Normal': {
                 'description': 'Показатели в пределах нормы',
@@ -88,24 +86,19 @@ class BloodAnalysisAI:
         }
     
     def load_model(self, model_path):
-        """Загрузка обученной модели и артефактов"""
         try:
-            # Загрузка модели
             model_file = os.path.join(model_path, 'model.h5')
             if os.path.exists(model_file):
                 self.model = tf.keras.models.load_model(model_file, compile=False)
                 
-            # Загрузка scaler
             scaler_file = os.path.join(model_path, 'scaler.pkl')
             if os.path.exists(scaler_file):
                 self.scaler = joblib.load(scaler_file)
                 
-            # Загрузка label encoder
             le_file = os.path.join(model_path, 'label_encoder.pkl')
             if os.path.exists(le_file):
                 self.label_encoder = joblib.load(le_file)
                 
-            # Загрузка метаданных
             metadata_file = os.path.join(model_path, 'metadata.json')
             if os.path.exists(metadata_file):
                 with open(metadata_file, 'r') as f:
@@ -284,41 +277,34 @@ class BloodAnalysisAI:
         }
     
     def analyze_blood_test(self, blood_data, age, gender):
-        """Анализ результатов крови с использованием ИИ"""
         try:
-            # Подготовка данных для модели
             features = ['WBC_Count', 'RBC_Count', 'Hemoglobin', 'Hematocrit', 'PLT_Count',
                        'Neutrophils', 'Lymphocytes', 'Monocytes', 'Eosinophils', 'ESR',
                        'Age', 'CRP']
             
-            # Создание вектора признаков
             feature_vector = []
             for feature in features:
                 if feature == 'Age':
                     feature_vector.append(age)
                 elif feature == 'Sickness_Duration_Months':
-                    feature_vector.append(0)  # Предполагаем отсутствие симптомов
+                    feature_vector.append(0)  
                 elif feature in blood_data:
                     feature_vector.append(float(blood_data[feature]))
                 else:
-                    # Используем средние значения для отсутствующих параметров
                     default_values = {
                         'CRP': 1.0, 'ESR': 10.0, 'Neutrophils': 4.0,
                         'Lymphocytes': 2.0, 'Monocytes': 0.5, 'Eosinophils': 0.2
                     }
                     feature_vector.append(default_values.get(feature, 0))
             
-            # Нормализация данных
             if self.scaler and self.model:
                 feature_vector = np.array(feature_vector).reshape(1, -1)
                 feature_vector_scaled = self.scaler.transform(feature_vector)
                 
-                # Предсказание
                 predictions = self.model.predict(feature_vector_scaled)
                 predicted_class_idx = np.argmax(predictions[0])
                 confidence = float(predictions[0][predicted_class_idx])
                 
-                # Получение названия класса
                 if self.label_encoder:
                     predicted_class = self.label_encoder.classes_[predicted_class_idx]
                 else:
@@ -340,10 +326,8 @@ class BloodAnalysisAI:
             return {'predicted_disease': 'Normal', 'confidence': 0.5, 'probabilities': {}}
     
     def check_deviations(self, blood_data, age, gender):
-        """Проверка отклонений от нормальных значений с учетом возраста и пола"""
         deviations = {}
         
-        # Получаем референсные значения для конкретного возраста и пола
         reference_ranges = self.get_normal_ranges(age, gender)
         
         for parameter, value in blood_data.items():
@@ -369,23 +353,18 @@ class BloodAnalysisAI:
         
         return deviations
 
-# Инициализация ИИ модели
 ai_analyzer = BloodAnalysisAI()
 
 @app.route('/')
 def index():
-    """Главная страница с формой ввода данных"""
     return render_template('index.html')
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
-    """Анализ результатов крови"""
     try:
-        # Получение данных из формы
         age = int(request.form['age'])
         gender = request.form['gender']
         
-        # Параметры крови
         blood_data = {
             'WBC_Count': float(request.form['wbc_count']),
             'RBC_Count': float(request.form['rbc_count']),
@@ -393,23 +372,17 @@ def analyze():
             'Hematocrit': float(request.form['hematocrit']),
             'PLT_Count': float(request.form['plt_count']),
         }
-        
-        # Дополнительные параметры если есть
         optional_params = ['neutrophils', 'lymphocytes', 'monocytes', 'eosinophils', 'esr', 'crp']
         for param in optional_params:
             if param in request.form and request.form[param]:
                 blood_data[param.title()] = float(request.form[param])
         
-        # Анализ с помощью ИИ
         ai_result = ai_analyzer.analyze_blood_test(blood_data, age, gender)
         
-        # Проверка отклонений от нормы с учетом возраста и пола
         deviations = ai_analyzer.check_deviations(blood_data, age, gender)
         
-        # Подсчет количества отклонений
         deviations_count = sum(1 for dev in deviations.values() if not dev['is_normal'])
         
-        # Получение информации о заболевании
         predicted_disease = ai_result['predicted_disease']
         disease_info = ai_analyzer.disease_info.get(predicted_disease, {
             'description': 'Неизвестное состояние',
@@ -440,10 +413,8 @@ def api_analyze():
         gender = data['gender']
         blood_data = data['blood_data']
         
-        # Анализ с помощью ИИ
         ai_result = ai_analyzer.analyze_blood_test(blood_data, age, gender)
         
-        # Проверка отклонений с учетом возраста и пола
         deviations = ai_analyzer.check_deviations(blood_data, age, gender)
         
         return jsonify({
