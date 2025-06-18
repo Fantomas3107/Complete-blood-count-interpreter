@@ -111,7 +111,6 @@ class BloodAnalysisAI:
             self.model = None
     
     def get_normal_ranges(self, age, gender):
-        """Получение референсных значений с учетом возраста и пола"""
         if age < 18:
             raise ValueError("Эта функция предназначена только для взрослых пациентов (18 лет и старше)")
         
@@ -405,7 +404,6 @@ def analyze():
 
 @app.route('/api/analyze', methods=['POST'])
 def api_analyze():
-    """API endpoint для анализа крови"""
     try:
         data = request.get_json()
         
